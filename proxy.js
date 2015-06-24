@@ -1,6 +1,7 @@
 var Proxy = require("anyproxy");
 var ipc = require('ipc');
 var path = require("path");
+var qs = require('querystring');
 
 var url = require('url');
 var queryString = require('querystring');
@@ -110,6 +111,7 @@ ipc.on('main:ready', function(event) {
                 var query = url.parse(data.url).query;
                 data.params = queryString.parse(query);
                 data.resBody = resBody;
+                data.reqBody = qs.parse(data.reqBody);
                 sender.send('requestData', data);
             });
         }

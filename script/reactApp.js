@@ -196,15 +196,18 @@ var TableComponent = React.createClass({
       };
   },
   componentWillMount: function() {
-    var that = this;
+    var that = this, timer = null;
     ipc.send('main:ready', 'ready');
     ipc.on('requestData', function(requestInfo) {
         var datas = that.state.datas;
         datas.push(requestInfo);
 
-        that.setState({
-          datas: datas
-        });
+        clearTimeout(timer);
+        timer = setTimeout(function() {
+          that.setState({
+            datas: datas
+          });
+        }, 30);
     });
 
     ipc.on('clearRequestData', function() {
@@ -268,10 +271,11 @@ var TableComponent = React.createClass({
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Method</th>
+                    <th className="text-tr">Method</th>
                     <th>Status</th>
                     <th>Type</th>
-                    <th>Size</th>
+                    <th className="text-tr">Size</th>
+                    <th className="text-tr">Time</th>
                 </tr>
             </thead>
             <tbody ref="tbody" onScroll={this.scrollRender}>
@@ -316,6 +320,16 @@ TrComponent = React.createClass({
     this.setState({
       selected: false
     });
+  },
+  shouldComponentUpdate: function(nextProps, nextState) {
+    if(this.state.selected != nextState.selected) {
+      return true;
+    }
+
+    if(this.props.data && nextProps.data.id === this.props.data.id) {
+      return false;
+    }
+    return true;
   },
   componentDidMount: function () {
       var that = this;
@@ -455,7 +469,7 @@ TrComponent = React.createClass({
       className += ' hide';
     }
 
-    if(requestData.statusCode > 300) {
+    if(requestData.statusCode > 400) {
       className += ' error-text';
     }
 
@@ -468,8 +482,6 @@ TrComponent = React.createClass({
     if(!largeSize) {
       largeText = '';
     }
-
-
 
     var pathEl = <li className="pure-menu-item">{requestData.path}</li>
     if(requestData.protocol === 'https') {
@@ -485,7 +497,7 @@ TrComponent = React.createClass({
                   <li className="pure-menu-item">{requestData.host}</li>
               </ul>
           </td>
-          <td>{requestData.method}</td>
+          <td className="text-tr">{requestData.method}</td>
           <td>
               <ul className="pure-menu-list">
                   <li className="pure-menu-item">{requestData.statusCode}</li>
@@ -497,7 +509,8 @@ TrComponent = React.createClass({
                   <li className="pure-menu-item">{contentType}</li>
               </ul>
           </td>
-          <td>{largeText}</td>
+          <td className="text-tr">{largeText}</td>
+          <td className="text-tr">{requestData.duration} ms</td>
       </tr>
       );
   }
@@ -534,6 +547,12 @@ DetailComponent = React.createClass({
     }
 
     return true;
+  },
+  componentDidMount: function() {
+    var that = this;
+    ipc.on('main:closeDetail', function() {
+      that.close();
+    });
   },
   close: function() {
     this.props.cancelSelect();
@@ -640,10 +659,48 @@ DetailTabComponent = React.createClass({
       previewText = <div className="text-info">No Preview In This Request.</div>;
     }
 
+    var queryComponent;
+    if(Object.keys(requestData.params).length) {
+      queryComponent =  (
+        <div>
+          <h3>Query Params</h3>
+          <ul className="pure-menu-list req">
+            {Object.keys(requestData.params).map(function(key, i) {
+              return (
+                  <li key={i}>
+                    <strong className="item-key">{key}: </strong>
+                    <span className="item-value">{requestData.params[key]}</span>
+                  </li>
+                );
+            })}
+          </ul>
+        </div>
+      );
+    }
+
+    var formDataComponent;
+    if(Object.keys(requestData.reqBody).length) {
+      formDataComponent =  (
+        <div>
+          <h3>Form Data</h3>
+          <ul className="pure-menu-list req">
+            {Object.keys(requestData.reqBody).map(function(key, i) {
+              return (
+                  <li key={i}>
+                    <strong className="item-key">{key}: </strong>
+                    <span className="item-value">{requestData.reqBody[key]}</span>
+                  </li>
+                );
+            })}
+          </ul>
+        </div>
+      )
+    }
+
     return (
       <div className="outer">
         <div className="pure-menu pure-menu-horizontal tabs">
-          <i className="fa fa-times close" onClick={this.props.close}></i>
+          <i className="fa fa-times close" ref="closeBtn" onClick={this.props.close}></i>
           <ul className="pure-menu-list">
           {this.tabs.map(function(item, i) {
             var className = 'pure-menu-item';
@@ -683,9 +740,9 @@ DetailTabComponent = React.createClass({
             </ul>
             <h3>Response Header</h3>
             <ul className="pure-menu-list res">
-              {Object.keys(requestData.resHeader).map(function(key) {
+              {Object.keys(requestData.resHeader).map(function(key, i) {
                 return (
-                    <li>
+                    <li key={i}>
                       <strong className="item-key">{key}: </strong>
                       <span className="item-value">{requestData.resHeader[key]}</span>
                     </li>
@@ -694,26 +751,17 @@ DetailTabComponent = React.createClass({
             </ul>
             <h3>Request Header</h3>
             <ul className="pure-menu-list req">
-              {Object.keys(requestData.reqHeader).map(function(key) {
+              {Object.keys(requestData.reqHeader).map(function(key, i) {
                 return (
-                    <li>
+                    <li key={i}>
                       <strong className="item-key">{key}: </strong>
                       <span className="item-value">{requestData.reqHeader[key]}</span>
                     </li>
                   );
               })}
             </ul>
-            <h3>Query Params</h3>
-            <ul className="pure-menu-list req">
-              {Object.keys(requestData.params).map(function(key) {
-                return (
-                    <li>
-                      <strong className="item-key">{key}: </strong>
-                      <span className="item-value">{requestData.params[key]}</span>
-                    </li>
-                  );
-              })}
-            </ul>
+            {queryComponent}
+            {formDataComponent}
           </div>
           <div className={this.state.selected === 'Preview'?  'tab-content': 'tab-content hide' }>
             {previewText}

@@ -23,6 +23,13 @@ app.on('window-all-closed', function() {
 // This method will be called when Electron has done everything
 // initialization and ready for creating browser windows.
 app.on('ready', function() {
+    var sender;
+    ipc.on('main:ready', function(event) {
+        if(!sender) {
+            sender = event.sender;
+        }
+    });
+
     // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 980,
@@ -38,6 +45,13 @@ app.on('ready', function() {
     GlobalShortcut.register('Control+x', function() {
         console.log('Control+x is pressed');
         clearRequestData();
+    });
+
+    GlobalShortcut.register('esc', function() {
+        console.log('esc is pressed');
+        if(sender) {
+            sender.send('main:closeDetail');
+        }
     });
 
     // GlobalShortcut.register('CmdOrCtrl+Alt+i', function() {
@@ -61,13 +75,7 @@ app.on('ready', function() {
         // when you should delete the corresponding element.
         mainWindow = null;
         dialogWindow = null;
-    });
-
-    var sender;
-    ipc.on('main:ready', function(event) {
-        if(!sender) {
-            sender = event.sender;
-        }
+        app.quit();
     });
 
     mainWindow.on('resize', function() {

@@ -120,6 +120,7 @@ ipc.on('main:startListenReq', function(event, isListenReq) {
     isListening = isListenReq;
 });
 
+var qrSender = null;
 portfinder.getPort(function(err, port) {
     httpPort = port;
     var HomePath = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
@@ -127,15 +128,25 @@ portfinder.getPort(function(err, port) {
 
     var connect = require('connect');
     var serveStatic = require('serve-static');
+    var con = connect();
 
-    connect().use(serveStatic(RootPath)).listen(port);
+    con.use('/', function(req, res, next) {
+        if(qrSender && req.url.indexOf('rootCA.crt') > -1) {
+            qrSender.send('qrcode:scan');
+        }
+        next();
+    });
+    con.use(serveStatic(RootPath)).listen(port);
+
     rootCADLink = 'http://' + localIp + ':' + port + '/rootCA.crt';
 });
+
 
 ipc.on('qrcode:ready', function(event) {
     var qr = qrCode.qrcode(4, 'M');
     qr.addData(rootCADLink);
     qr.make();
+    qrSender = event.sender;
     event.sender.send('qrcode:dlink', {
         link: rootCADLink,
         imgTag: qr.createImgTag(4)

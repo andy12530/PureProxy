@@ -16,16 +16,20 @@ p {
     text-align: center;
     word-break: break-word;
 }
+.succ {
+    color: green;
+}
 </style>
 </head>
 <body>
 <script type="text/javascript">
 var ipc = require('ipc');
+var remote = require('remote');
 ipc.send('qrcode:ready', 'ready');
 
 ipc.on('qrcode:dlink', function(data) {
     var html = data.imgTag;
-    html += '<p>访问链接 '+ data.link +' , 下载安装证书</p>';
+    html += '<p id="text">访问链接 '+ data.link +' , 下载安装证书</p>';
     document.body.innerHTML = html;
 
     var remote = require('remote');
@@ -42,6 +46,15 @@ ipc.on('qrcode:dlink', function(data) {
       e.preventDefault();
       menu.popup(remote.getCurrentWindow());
     }, false);
+});
+
+remote.getCurrentWindow().on('close', function() {
+    ipc.send('qrcode:ready', 'ready');
+});
+
+ipc.on('qrcode:scan', function() {
+    var node = document.getElementById('text');
+    node.innerHTML = '<span class="succ">扫描成功！</span>';
 });
 </script>
 </body>

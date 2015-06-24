@@ -1,0 +1,13 @@
+{
+  "name": "Fildder",
+  "version": "0.1.0",
+  "main": "main.js",
+  "devDependencies": {
+    "anyproxy": "^3.5.1",
+    "connect": "^3.4.0",
+    "node-syntaxhighlighter": "^0.8.1",
+    "portfinder": "^0.4.0",
+    "qrcode-npm": "0.0.3",
+    "serve-static": "^1.10.0"
+  }
+}

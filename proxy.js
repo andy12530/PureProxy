@@ -7,7 +7,8 @@ var url = require('url');
 var queryString = require('querystring');
 
 var util = require('./util.js');
-var portfinder = require('portfinder'), rootCADLink = '';
+var portfinder = require('portfinder'),
+    rootCADLink = '';
 var qrCode = require('qrcode-npm');
 var localIp = util.getLocalIP();
 var httpPort, proxyPort;
@@ -84,14 +85,15 @@ var rules = {
     },
 
     shouldInterceptHttpsReq: function(req) {
-        if(config.https) {
+        if (config.https) {
             return true;
         }
         return false;
     }
 };
 
-var sender = null, isListening = true;
+var sender = null,
+    isListening = true;
 ipc.on('main:ready', function(event) {
     if (!sender) {
         sender = event.sender;
@@ -102,7 +104,7 @@ ipc.on('main:ready', function(event) {
     }
 
     GLOBAL.recorder.on('update', function(data) {
-        if(!isListening) {
+        if (!isListening) {
             return false;
         }
         var id = data._id;
@@ -126,14 +128,14 @@ var qrSender = null;
 portfinder.getPort(function(err, port) {
     httpPort = port;
     var HomePath = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
-    var RootPath = path.join(HomePath,"/.anyproxy_certs/");
+    var RootPath = path.join(HomePath, "/.anyproxy_certs/");
 
     var connect = require('connect');
     var serveStatic = require('serve-static');
     var con = connect();
 
     con.use('/', function(req, res, next) {
-        if(qrSender && req.url.indexOf('rootCA.crt') > -1) {
+        if (qrSender && req.url.indexOf('rootCA.crt') > -1) {
             qrSender.send('qrcode:scan');
         }
         next();

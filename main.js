@@ -43,20 +43,17 @@ app.on('ready', function() {
     };
 
     GlobalShortcut.register('Control+x', function() {
-        console.log('Control+x is pressed');
         clearRequestData();
     });
 
     GlobalShortcut.register('esc', function() {
-        console.log('esc is pressed');
         if(sender) {
             sender.send('main:closeDetail');
         }
     });
 
-    // GlobalShortcut.register('CmdOrCtrl+Alt+i', function() {
-    //     console.log('CmdOrCtrl+Alt+i is pressed');
-    // });
+    GlobalShortcut.register('CmdOrCtrl+Alt+i', function() {
+    });
 
     ipc.on('main:clearRequestData', function(event) {
         clearRequestData();

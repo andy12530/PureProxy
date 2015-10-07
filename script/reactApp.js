@@ -654,7 +654,7 @@ DetailTabComponent = React.createClass({
               return (
                   <li key={i}>
                     <strong className="item-key">{key}: </strong>
-                    <span className="item-value">{requestData.params[key]}</span>
+                    <span className="item-value">{decodeURIComponent(requestData.params[key])}</span>
                   </li>
                 );
             })}

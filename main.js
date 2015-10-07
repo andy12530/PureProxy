@@ -43,12 +43,12 @@ app.on('ready', function() {
     };
 
     GlobalShortcut.register('Control+x', function() {
-        console.log('Control+x is pressed');
+        // console.log('Control+x is pressed');
         clearRequestData();
     });
 
     GlobalShortcut.register('esc', function() {
-        console.log('esc is pressed');
+        // console.log('esc is pressed');
         if(sender) {
             sender.send('main:closeDetail');
         }

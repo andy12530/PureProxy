@@ -219,10 +219,6 @@ var TableComponent = React.createClass({
         that.connectNumNode.innerText = 0;
       }
     });
-
-    ipc.on('main:resize', function() {
-      console.log('resize');
-    });
   },
   componentWillUpdate: function() {
     var conectionNum = this.state.datas.length;
@@ -261,7 +257,7 @@ var TableComponent = React.createClass({
     });
   },
   scrollRender: function() {
-    console.log('scroll');
+    // console.log('scroll');
   },
   render: function() {
     var that = this;
@@ -321,16 +317,6 @@ TrComponent = React.createClass({
       selected: false
     });
   },
-  shouldComponentUpdate: function(nextProps, nextState) {
-    if(this.state.selected != nextState.selected) {
-      return true;
-    }
-
-    if(this.props.data && nextProps.data.id === this.props.data.id) {
-      return false;
-    }
-    return true;
-  },
   componentDidMount: function () {
       var that = this;
       var node = this.refs.reqItem.getDOMNode();
@@ -363,8 +349,12 @@ TrComponent = React.createClass({
           curlCmd += "-H '" + k + ": " + requestData.reqHeader[k] + "' ";
         });
 
-        if(requestData.reqBody) {
-          curlCmd += "-d '" + requestData.reqBody + "' ";
+        if(requestData.reqBody && Object.keys(requestData.reqBody).length) {
+          var curlDataStr = '';
+          Object.keys(requestData.reqBody).forEach(function(k) {
+            curlDataStr += k + "=" + encodeURIComponent(requestData.reqBody[k]);
+          });
+          curlCmd += "-d '" + curlDataStr;
         }
 
         curlCmd = curlCmd.trim();
@@ -446,7 +436,6 @@ TrComponent = React.createClass({
     }
 
     var type = this.getFileType(requestData);
-
     this.fileType = type;
 
     var iconClassNameEnum = {
@@ -574,7 +563,7 @@ DetailComponent = React.createClass({
 
 DetailTabComponent = React.createClass({
   getInitialState: function() {
-    this.tabs = ['Header', 'Preview', 'Response'];
+    this.tabs = ['Header', 'Response'];
     return {
       selected: 'Header'
     };
@@ -639,6 +628,7 @@ DetailTabComponent = React.createClass({
   render: function() {
     var that = this;
     var requestData = this.props.selectedData;
+
     var statusCodeClass = 'item-value';
     if(requestData.statusCode > 400) {
       statusCodeClass = 'item-value error-text';
@@ -647,16 +637,11 @@ DetailTabComponent = React.createClass({
     var responseText;
     if(requestData.resBody && /(script|text|css|html|json|xml)/.test(requestData.resHeader['content-type'])) {
       responseText = <pre ref="codeBlock" onClick={this.copyResBody}>{requestData.resBody}</pre>;
-    } else {
-      responseText = <div className="text-info">No Data In This Request.</div>;
-    }
-
-    var previewText;
-    if(requestData.resBody && /image/.test(requestData.resHeader['content-type'])) {
+    } else if(requestData.resBody && /image/.test(requestData.resHeader['content-type'])) {
       var src = 'data:image/png;base64,' + requestData.resBody;
-      previewText = <img ref="img" src={src} />
-    } else {
-      previewText = <div className="text-info">No Preview In This Request.</div>;
+      responseText = <img ref="img" src={src} />
+    }  else {
+      responseText = <div className="text-info">No Data In This Request.</div>;
     }
 
     var queryComponent;
@@ -762,9 +747,6 @@ DetailTabComponent = React.createClass({
             </ul>
             {queryComponent}
             {formDataComponent}
-          </div>
-          <div className={this.state.selected === 'Preview'?  'tab-content': 'tab-content hide' }>
-            {previewText}
           </div>
           <div className={this.state.selected === 'Response'?  'tab-content': 'tab-content hide' }>
             {responseText}

@@ -319,6 +319,10 @@ TrComponent = React.createClass({
   },
   componentDidMount: function () {
       var that = this;
+      if(!this.refs.reqItem) {
+        return false;
+      }
+
       var node = this.refs.reqItem.getDOMNode();
 
       var requestData = that.props.data;
@@ -408,9 +412,8 @@ TrComponent = React.createClass({
     if(!filterType) {
       return false;
     }
-
-    if(filterType === 'xhr' && requestData.reqHeader['X-Requested-With']) {
-      return true;
+    if(filterType === 'xhr' && requestData.reqHeader['x-requested-with']) {
+      return false;
     }
 
     if(filterType !== type) {
@@ -455,6 +458,7 @@ TrComponent = React.createClass({
 
     var isHide = this.notMatchFilter(requestData, type);
     if(isHide) {
+      return false;
       className += ' hide';
     }
 
